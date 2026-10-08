@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-sans: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+}
+
+html {
+  background-color: var(--color-stone-50);
+  color: var(--color-stone-800);
+  font-family: var(--font-sans);
+}

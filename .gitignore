@@ -1,0 +1,29 @@
+# App data (database, thumbnails, cache) - never commit
+data/
+
+# Personal photos used for local testing - never commit
+photos*/
+
+# Python
+backend/.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Node
+node_modules/
+frontend/dist/
+
+# Tauri
+desktop/src-tauri/target/
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Test artifacts
+playwright-report/
+test-results/
