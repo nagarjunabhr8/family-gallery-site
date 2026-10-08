@@ -96,6 +96,26 @@ class ClipScorer:
         return float(embedding @ weight.reshape(-1) + bias.reshape(-1)[0])
 
 
+class ClipText:
+    """CLIP text encoder; shares the embedding space with ClipScorer.embed()."""
+
+    def __init__(self) -> None:
+        from tokenizers import Tokenizer
+
+        opts = ort.SessionOptions()
+        opts.log_severity_level = 3
+        self.session = ort.InferenceSession(
+            str(registry.model_path("clip_text")), opts, providers=["CPUExecutionProvider"]
+        )
+        self.tokenizer = Tokenizer.from_file(str(registry.model_path("clip_tokenizer")))
+
+    def embed(self, text: str) -> np.ndarray:
+        ids = self.tokenizer.encode(text.lower()).ids[:77]
+        (out,) = self.session.run(["text_embeds"], {"input_ids": np.array([ids], dtype=np.int64)})
+        vec = out.reshape(-1).astype(np.float32)
+        return vec / (np.linalg.norm(vec) + 1e-8)
+
+
 def aesthetic_score(raw: float) -> float:
     """Map LAION rating to 0..1 (3.5 -> 0, 7.5 -> 1)."""
     return min(1.0, max(0.0, (raw - 3.5) / 4.0))

@@ -8,7 +8,8 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import config, db, safety
-from .api import folders, groups, media, people, scan
+from .api import events, folders, groups, media, occasions, people, scan
+from .occasions.festivals import seed_festivals
 from .scanner.jobs import manager
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -18,6 +19,8 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 async def lifespan(_app: FastAPI):
     data = safety.set_data_dir(config.default_data_dir())
     db.init_db(data)
+    with db.SessionLocal() as s:
+        seed_festivals(s)
     manager.start()
     logging.getLogger(__name__).info("Data folder: %s", data)
     yield
@@ -30,6 +33,8 @@ app.include_router(scan.router)
 app.include_router(media.router)
 app.include_router(groups.router)
 app.include_router(people.router)
+app.include_router(events.router)
+app.include_router(occasions.router)
 
 
 @app.get("/api/health")

@@ -274,7 +274,10 @@ function DuplicateSettings({ scanning, onAnalyze }: { scanning: boolean; onAnaly
       const res = await api.saveSettings(settings)
       setSaved(res.settings)
       setSettings(res.settings)
-      setNote(`Regrouped: ${res.regroup.groups} groups, ${res.regroup.hidden} copies tucked away.`)
+      setNote(
+        `Regrouped: ${res.regroup.groups} duplicate groups, ${res.regroup.hidden} copies tucked away` +
+          (res.events ? `, ${res.events.events} events.` : '.'),
+      )
     } catch (e) {
       setNote((e as Error).message)
     } finally {
@@ -282,16 +285,21 @@ function DuplicateSettings({ scanning, onAnalyze }: { scanning: boolean; onAnaly
     }
   }
 
-  const slider = (key: 'near_dup_threshold' | 'burst_threshold', label: string, help: string, max: number) => (
+  type NumKey = 'near_dup_threshold' | 'burst_threshold' | 'event_gap_hours' | 'event_gps_km' | 'event_min_photos' | 'tag_threshold'
+  const slider = (key: NumKey, label: string, help: string, max: number, min = 0, step = 1, unit = '') => (
     <label className="block">
       <div className="flex justify-between text-sm">
         <span className="text-stone-800">{label}</span>
-        <span className="tabular-nums text-stone-500">{settings[key]}</span>
+        <span className="tabular-nums text-stone-500">
+          {settings[key]}
+          {unit}
+        </span>
       </div>
       <input
         type="range"
-        min={0}
+        min={min}
         max={max}
+        step={step}
         value={settings[key]}
         onChange={(e) => setSettings({ ...settings, [key]: Number(e.target.value) })}
         className="mt-2 w-full accent-amber-600"
@@ -335,6 +343,24 @@ function DuplicateSettings({ scanning, onAnalyze }: { scanning: boolean; onAnaly
             'For photos taken within the same minute (camera time only). Should be higher than look-alike sensitivity.',
             40,
           )}
+        <h3 className="border-t border-stone-200 pt-5 font-serif text-lg text-stone-900">Events</h3>
+        {slider('event_gap_hours', 'New event after a break of', 'Photos further apart than this start a new event.', 48, 1, 1, ' h')}
+        {slider('event_gps_km', 'New event after travelling', 'For photos with GPS: a jump this far starts a new event.', 500, 5, 5, ' km')}
+        {slider(
+          'event_min_photos',
+          'Smallest event',
+          'Smaller groups go into a monthly “Moments” event (unless taken on a festival or family occasion).',
+          10,
+          1,
+        )}
+        {slider(
+          'tag_threshold',
+          'Scene tag certainty',
+          'How sure the AI must be to tag a photo as birthday, temple, beach…  Lower tags more photos (with more mistakes).',
+          0.7,
+          0.2,
+          0.05,
+        )}
         <div className="flex items-center gap-3">
           <button
             onClick={save}

@@ -112,6 +112,10 @@ def update_person(person_id: int, body: PersonPatch, s: Session = Depends(get_se
     if "hidden" in fields and body.hidden is not None:
         p.hidden = body.hidden
     s.commit()
+    if fields & {"name", "birth_date", "hidden"}:  # birthdays shape events
+        from .occasions import rebuild_if_idle
+
+        rebuild_if_idle(s)
     return person_dict(p, _person_stats(s).get(p.id))
 
 

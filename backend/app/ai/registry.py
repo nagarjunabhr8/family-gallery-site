@@ -35,6 +35,16 @@ MODELS: dict[str, ModelSpec] = {
         "https://github.com/LAION-AI/aesthetic-predictor/raw/main/sa_0_4_vit_b_32_linear.pth",
         "LAION aesthetic predictor (linear head on CLIP ViT-B/32)",
     ),
+    "clip_text": ModelSpec(
+        "clip-vit-b32-text-q8.onnx",
+        "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/main/onnx/text_model_quantized.onnx",
+        "CLIP ViT-B/32 text encoder, 8-bit (scene tags)",
+    ),
+    "clip_tokenizer": ModelSpec(
+        "clip-vit-b32-tokenizer.json",
+        "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/main/tokenizer.json",
+        "CLIP tokenizer (scene tags)",
+    ),
     "buffalo_l": ModelSpec(
         "buffalo_l",
         "https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip",

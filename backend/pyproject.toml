@@ -13,12 +13,14 @@ dependencies = [
     "numpy>=1.26",
     "imageio-ffmpeg>=0.5",  # bundled local ffmpeg for H.264 video export
     "onnxruntime>=1.18",  # local CLIP / face models
+    "tokenizers>=0.19",  # CLIP text tokenizer (scene tags)
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8",
     "httpx>=0.27",
+    "ephem>=4.1",  # scripts/gen_festival_dates.py only
 ]
 
 [build-system]

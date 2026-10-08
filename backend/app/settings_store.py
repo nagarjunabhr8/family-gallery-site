@@ -13,6 +13,14 @@ DEFAULTS: dict[str, Any] = {
     # Looser distance for photos taken in the same minute (bursts)
     "burst_threshold": 20,
     "burst_enabled": True,
+    # Events: a gap longer than this (hours) starts a new event
+    "event_gap_hours": 6,
+    # ...as does a jump of more than this many km between geotagged photos
+    "event_gps_km": 30,
+    # Smaller clusters are gathered into a monthly "Moments" event
+    "event_min_photos": 3,
+    # CLIP scene tag confidence (0..1) needed to tag a photo
+    "tag_threshold": 0.35,
 }
 
 

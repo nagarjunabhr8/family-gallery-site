@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import Duplicates from './pages/Duplicates'
+import EventPage from './pages/EventPage'
+import Events from './pages/Events'
 import Library from './pages/Library'
+import Occasions from './pages/Occasions'
 import People from './pages/People'
 import PersonPage from './pages/PersonPage'
 import Settings from './pages/Settings'
@@ -8,6 +11,9 @@ import Unsorted from './pages/Unsorted'
 
 type Route =
   | { name: 'library' }
+  | { name: 'events' }
+  | { name: 'event'; id: number }
+  | { name: 'occasions' }
   | { name: 'people' }
   | { name: 'person'; id: number }
   | { name: 'unsorted' }
@@ -19,6 +25,10 @@ function readRoute(): Route {
   if (hash === 'settings') return { name: 'settings' }
   if (hash === 'duplicates') return { name: 'duplicates' }
   if (hash === 'people') return { name: 'people' }
+  if (hash === 'events') return { name: 'events' }
+  if (hash === 'occasions') return { name: 'occasions' }
+  const ev = hash.match(/^events\/(\d+)$/)
+  if (ev) return { name: 'event', id: Number(ev[1]) }
   if (hash === 'people/unsorted') return { name: 'unsorted' }
   const m = hash.match(/^people\/(\d+)$/)
   if (m) return { name: 'person', id: Number(m[1]) }
@@ -27,7 +37,9 @@ function readRoute(): Route {
 
 const NAV: [string, string, Route['name'][]][] = [
   ['#/', 'Library', ['library']],
+  ['#/events', 'Events', ['events', 'event']],
   ['#/people', 'People', ['people', 'person', 'unsorted']],
+  ['#/occasions', 'Occasions', ['occasions']],
   ['#/duplicates', 'Duplicates', ['duplicates']],
   ['#/settings', 'Settings', ['settings']],
 ]
@@ -54,6 +66,15 @@ function App() {
       break
     case 'people':
       page = <People />
+      break
+    case 'events':
+      page = <Events />
+      break
+    case 'event':
+      page = <EventPage key={route.id} id={route.id} />
+      break
+    case 'occasions':
+      page = <Occasions />
       break
     case 'unsorted':
       page = <Unsorted />

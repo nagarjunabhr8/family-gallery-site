@@ -1,4 +1,5 @@
-"""Analysis job: pHash, quality, CLIP and faces for new/changed photos; then regroup duplicates and cluster people."""
+"""Analysis job: pHash, quality, CLIP and faces for new/changed photos;
+then regroup duplicates, cluster people, tag scenes and rebuild events."""
 
 import json
 import logging
@@ -17,6 +18,8 @@ from .. import settings_store
 from ..ai import registry
 from ..db import SessionLocal
 from ..models import ClipEmbedding, Face, Media, Quality, ScanJob, SourceFolder
+from ..events.build import rebuild_events
+from ..events.tags import tag_all
 from ..people.cluster import cluster_faces
 from ..people.crops import delete_crop, make_crop, save_crop
 from ..safety import open_source
@@ -307,6 +310,11 @@ def _analyze(s: Session, job: ScanJob, cancel: threading.Event | None) -> None:
             f"{people['new_people']} new people found, {people['assigned']} faces sorted, "
             f"{people['unassigned']} faces not yet recognised"
         )
+    tagged = tag_all(s, settings_store.get_all(s)["tag_threshold"])
+    if "photos" in tagged:
+        notes.append(f"{tagged['tagged']} photos got scene tags")
+    events = rebuild_events(s)
+    notes.append(f"{events['events']} events")
     status = registry.status()
     if status["buffalo_l"]["installed"]:
         status.pop("yunet")  # only a fallback

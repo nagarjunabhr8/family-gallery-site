@@ -1,4 +1,4 @@
-"""SQLAlchemy models. Phase 1: folders, media, scan jobs, settings."""
+"""SQLAlchemy models: library (P1), duplicates/quality (P2), people (P3), events/occasions (P4)."""
 
 from datetime import date, datetime
 
@@ -176,6 +176,79 @@ class Face(Base):
     )
     assigned_by: Mapped[str] = mapped_column(String(8), default="auto")  # auto | user
     not_person_ids: Mapped[str] = mapped_column(Text, default="[]")  # JSON: people this face is NOT
+
+
+class MediaTag(Base):
+    """CLIP zero-shot scene tag (birthday, temple, ...). Recomputed on every analysis."""
+
+    __tablename__ = "media_tags"
+
+    media_id: Mapped[int] = mapped_column(ForeignKey("media.id", ondelete="CASCADE"), primary_key=True)
+    tag: Mapped[str] = mapped_column(String(32), primary_key=True, index=True)
+    score: Mapped[float]
+
+
+class Event(Base):
+    """A group of media from one occasion/outing.
+
+    kind: auto (time-gap grouping) | moments (small clusters of one month) | custom (user-made).
+    Locked events were edited by the user: they keep their photos across rebuilds
+    and absorb new photos that fall inside their time window.
+    """
+
+    __tablename__ = "events"
+    __table_args__ = {"sqlite_autoincrement": True}
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    kind: Mapped[str] = mapped_column(String(8), default="auto")
+    title: Mapped[str | None] = mapped_column(String, default=None)  # None = generated
+    description: Mapped[str | None] = mapped_column(Text, default=None)
+    start_at: Mapped[datetime]
+    end_at: Mapped[datetime]
+    locked: Mapped[bool] = mapped_column(default=False)
+    hero_media_id: Mapped[int | None] = mapped_column(default=None)
+    hero_by_user: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(default=_now)
+
+
+class EventMedia(Base):
+    __tablename__ = "event_media"
+
+    media_id: Mapped[int] = mapped_column(ForeignKey("media.id", ondelete="CASCADE"), primary_key=True)
+    event_id: Mapped[int] = mapped_column(ForeignKey("events.id", ondelete="CASCADE"), index=True)
+    assigned_by: Mapped[str] = mapped_column(String(8), default="auto")  # auto | user
+
+
+class Occasion(Base):
+    """A family date that repeats every year: birthday, anniversary, other."""
+
+    __tablename__ = "occasions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    kind: Mapped[str] = mapped_column(String(16))  # birthday | anniversary | other
+    name: Mapped[str] = mapped_column(String)
+    month: Mapped[int]
+    day: Mapped[int]
+    year: Mapped[int | None] = mapped_column(default=None)  # first year (birth/wedding), for "3rd"
+    person_id: Mapped[int | None] = mapped_column(
+        ForeignKey("persons.id", ondelete="SET NULL"), default=None
+    )
+    created_at: Mapped[datetime] = mapped_column(default=_now)
+
+
+class FestivalDate(Base):
+    """When a festival fell in a given year. Seeded from a built-in table; user-editable."""
+
+    __tablename__ = "festival_dates"
+    __table_args__ = (UniqueConstraint("festival", "year"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    festival: Mapped[str] = mapped_column(String(32))
+    year: Mapped[int]
+    date: Mapped[date] = mapped_column(Date)  # the main day
+    start: Mapped[date] = mapped_column(Date)  # e.g. Bhogi for Sankranti
+    end: Mapped[date] = mapped_column(Date)  # e.g. Kanuma for Sankranti
+    user_edited: Mapped[bool] = mapped_column(default=False)
 
 
 class Setting(Base):

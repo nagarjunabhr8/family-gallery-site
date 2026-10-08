@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
-import { api, DATE_SOURCE_LABEL, faceUrl, formatBytes, formatDate, originalUrl } from '../api'
+import { api, DATE_SOURCE_LABEL, faceUrl, formatBytes, formatDate, originalUrl, TAG_LABEL } from '../api'
 import type { MediaDetail, MediaItem } from '../api'
 import QualityBars from './QualityBars'
 
@@ -121,6 +121,25 @@ export default function Viewer({ items, index, onIndex, onClose }: Props) {
                     {f.person_name ?? 'Unnamed'}
                   </a>
                 ))}
+            </div>
+          )}
+          {detail?.event && (
+            <a
+              href={`#/events/${detail.event.id}`}
+              onClick={onClose}
+              className="mt-5 block rounded-xl bg-white/10 px-3 py-2 hover:bg-white/20"
+            >
+              <span className="block text-xs uppercase tracking-wide text-stone-400">Event</span>
+              <span className="font-serif text-base">{detail.event.title}</span>
+            </a>
+          )}
+          {detail && detail.tags.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {detail.tags.map((t) => (
+                <span key={t.tag} className="rounded-full bg-white/10 px-2 py-0.5 text-xs" title={`${Math.round(t.score * 100)}% sure`}>
+                  {TAG_LABEL[t.tag]}
+                </span>
+              ))}
             </div>
           )}
           <dl className="mt-6 space-y-3">

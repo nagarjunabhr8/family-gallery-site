@@ -7,6 +7,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from ..analysis.run import regroup_from_settings
+from ..events.build import rebuild_events
 from ..db import get_session
 from ..models import Face, Media, ScanJob, SourceFolder
 from ..people.cluster import cleanup as cleanup_people
@@ -93,4 +94,5 @@ def remove_folder(folder_id: int, s: Session = Depends(get_session)):
     regroup_from_settings(s)
     cleanup_people(s)
     s.commit()
+    rebuild_events(s)
     return {"removed": folder_id, "media_forgotten": len(media_ids)}

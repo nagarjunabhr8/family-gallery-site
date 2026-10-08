@@ -9,6 +9,8 @@ from .. import settings_store
 from ..ai import registry
 from ..analysis.grouping import set_best
 from ..analysis.run import regroup_from_settings
+from ..events.build import rebuild_events, refresh_heroes
+from ..events.tags import tag_all
 from ..db import get_session
 from ..models import DupGroup, DupMember, Media, Quality, ScanJob
 from ..scanner.jobs import ACTIVE, manager
@@ -79,6 +81,7 @@ def choose_best(group_id: int, body: BestIn, s: Session = Depends(get_session)):
         g = set_best(s, g, body.media_id)
     except ValueError as e:
         raise HTTPException(400, str(e)) from e
+    refresh_heroes(s)  # a hidden copy may have been an event's cover
     return group_dict(s, g)
 
 
@@ -86,6 +89,10 @@ class SettingsIn(BaseModel):
     near_dup_threshold: int | None = Field(None, ge=0, le=32)
     burst_threshold: int | None = Field(None, ge=0, le=40)
     burst_enabled: bool | None = None
+    event_gap_hours: float | None = Field(None, ge=0.5, le=72)
+    event_gps_km: float | None = Field(None, ge=1, le=1000)
+    event_min_photos: int | None = Field(None, ge=1, le=20)
+    tag_threshold: float | None = Field(None, ge=0.1, le=0.9)
 
 
 @router.get("/settings")
@@ -97,8 +104,13 @@ def get_settings(s: Session = Depends(get_session)):
 def put_settings(body: SettingsIn, s: Session = Depends(get_session)):
     if s.scalars(select(ScanJob).where(ScanJob.status.in_(ACTIVE))).first():
         raise HTTPException(409, "Please wait for the current scan/analysis to finish.")
-    values = settings_store.update(s, body.model_dump(exclude_none=True))
-    return {"settings": values, "regroup": regroup_from_settings(s)}
+    changes = body.model_dump(exclude_none=True)
+    values = settings_store.update(s, changes)
+    result: dict = {"settings": values, "regroup": regroup_from_settings(s)}
+    if "tag_threshold" in changes:
+        result["tags"] = tag_all(s, values["tag_threshold"])
+    result["events"] = rebuild_events(s)  # duplicates/tags also affect events' highlights
+    return result
 
 
 @router.post("/analyze", status_code=202)

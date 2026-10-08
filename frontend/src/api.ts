@@ -61,6 +61,95 @@ export interface AppSettings {
   near_dup_threshold: number
   burst_threshold: number
   burst_enabled: boolean
+  event_gap_hours: number
+  event_gps_km: number
+  event_min_photos: number
+  tag_threshold: number
+}
+
+export type SceneTag = 'birthday' | 'wedding' | 'temple' | 'school' | 'travel' | 'beach'
+
+export const TAG_LABEL: Record<SceneTag, string> = {
+  birthday: 'Birthday',
+  wedding: 'Wedding',
+  temple: 'Temple',
+  school: 'School',
+  travel: 'Travel',
+  beach: 'Beach',
+}
+
+export interface OccasionHit {
+  kind: 'festival' | 'birthday' | 'anniversary' | 'other'
+  key: string
+  name: string
+  date: string
+  person_id: number | null
+}
+
+export interface EventSummary {
+  id: number
+  kind: 'auto' | 'moments' | 'custom'
+  title: string
+  custom_title: string | null
+  description: string | null
+  date_text: string
+  start_at: string
+  end_at: string
+  days: number
+  locked: boolean
+  hero_media_id: number | null
+  hero_by_user: boolean
+  photo_count: number
+  video_count: number
+  occasions: OccasionHit[]
+  tags: { tag: SceneTag; label: string }[]
+  people: { id: number; name: string | null; count: number }[]
+}
+
+export interface EventMediaItem extends MediaItem {
+  hidden_copy: boolean
+  tags: SceneTag[]
+}
+
+export interface EventDetail extends EventSummary {
+  curated: MediaItem[]
+  media: EventMediaItem[]
+}
+
+export interface EventLink {
+  id: number
+  title: string
+  kind: EventSummary['kind']
+  date_text: string
+  hero_media_id: number | null
+  photo_count: number
+}
+
+export interface FamilyOccasion {
+  id: number | null
+  kind: 'birthday' | 'anniversary' | 'other'
+  name: string
+  month: number
+  day: number
+  year: number | null
+  person_id: number | null
+  person_name: string | null
+  source: 'occasion' | 'person'
+}
+
+export type OccasionInput = Omit<FamilyOccasion, 'id' | 'person_name' | 'source'>
+
+export interface FestivalDay {
+  id: number
+  festival: string
+  name: string
+  note: string | null
+  year: number
+  date: string
+  start: string
+  end: string
+  user_edited: boolean
+  events: EventLink[]
 }
 
 export type AiStatus = Record<string, { installed: boolean; purpose: string; file: string }>
@@ -116,6 +205,8 @@ export interface FaceInPhoto {
 export interface MediaDetail extends MediaItem {
   faces: FaceInPhoto[]
   quality: QualityScores | null
+  tags: { tag: SceneTag; score: number }[]
+  event: { id: number; title: string; date_text: string } | null
   path: string
   size: number
   camera: string | null
@@ -183,6 +274,7 @@ export interface MediaQuery {
   kind?: Kind
   date_source?: DateSource
   include_duplicates?: boolean
+  tag?: SceneTag
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -228,7 +320,7 @@ export const api = {
     request<DupGroup>(`/api/groups/${groupId}/best`, { method: 'POST', body: JSON.stringify({ media_id: mediaId }) }),
   settings: () => request<AppSettings>('/api/settings'),
   saveSettings: (s: Partial<AppSettings>) =>
-    request<{ settings: AppSettings; regroup: { groups: number; hidden: number } }>('/api/settings', {
+    request<{ settings: AppSettings; regroup: { groups: number; hidden: number }; events?: { events: number } }>('/api/settings', {
       method: 'PUT',
       body: JSON.stringify(s),
     }),
@@ -250,6 +342,48 @@ export const api = {
     }),
   recluster: () =>
     request<{ assigned: number; new_people: number; unassigned: number }>('/api/people/recluster', { method: 'POST' }),
+  events: (q: { year?: number; order?: 'asc' | 'desc'; include_moments?: boolean } = {}) => {
+    const params = new URLSearchParams()
+    for (const [k, v] of Object.entries(q)) if (v !== undefined) params.set(k, String(v))
+    return request<{ years: number[]; events: EventSummary[] }>(`/api/events?${params}`)
+  },
+  event: (id: number) => request<EventDetail>(`/api/events/${id}`),
+  updateEvent: (id: number, patch: { title?: string | null; description?: string | null; hero_media_id?: number | null }) =>
+    request<EventDetail>(`/api/events/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  createEvent: (body: { title: string; start: string; end: string; description?: string }) =>
+    request<EventDetail>('/api/events', { method: 'POST', body: JSON.stringify(body) }),
+  mergeEvents: (eventIds: number[]) =>
+    request<EventDetail>('/api/events/merge', { method: 'POST', body: JSON.stringify({ event_ids: eventIds }) }),
+  splitEvent: (id: number, mediaId: number) =>
+    request<{ event: EventDetail; new_event_id: number }>(`/api/events/${id}/split`, {
+      method: 'POST',
+      body: JSON.stringify({ media_id: mediaId }),
+    }),
+  moveMedia: (mediaIds: number[], eventId: number | null, newTitle?: string) =>
+    request<{ event_id: number }>('/api/events/move', {
+      method: 'POST',
+      body: JSON.stringify({ media_ids: mediaIds, event_id: eventId, new_title: newTitle }),
+    }),
+  dissolveEvent: (id: number) => request<{ events: number }>(`/api/events/${id}`, { method: 'DELETE' }),
+  occasions: () => request<FamilyOccasion[]>('/api/occasions'),
+  addOccasion: (o: OccasionInput) =>
+    request<FamilyOccasion>('/api/occasions', { method: 'POST', body: JSON.stringify(o) }),
+  editOccasion: (id: number, o: OccasionInput) =>
+    request<FamilyOccasion>(`/api/occasions/${id}`, { method: 'PUT', body: JSON.stringify(o) }),
+  deleteOccasion: (id: number) => request<{ ok: boolean }>(`/api/occasions/${id}`, { method: 'DELETE' }),
+  festivals: (year: number) =>
+    request<{ year: number; years: number[]; festivals: FestivalDay[] }>(`/api/festivals?year=${year}`),
+  editFestival: (id: number, date: string) =>
+    request<FestivalDay>(`/api/festivals/${id}`, { method: 'PATCH', body: JSON.stringify({ date }) }),
+  resetFestival: (id: number) => request<FestivalDay>(`/api/festivals/${id}/reset`, { method: 'POST' }),
+  occasionYears: (kind: string, key: string) =>
+    request<{ year: number; date: string; events: EventLink[] }[]>(`/api/occasions/${kind}/${key}/years`),
+}
+
+export const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
+export function dayMonth(month: number, day: number): string {
+  return `${day} ${MONTHS[month - 1].slice(0, 3)}`
 }
 
 export const faceUrl = (id: number) => `/api/faces/${id}/crop`

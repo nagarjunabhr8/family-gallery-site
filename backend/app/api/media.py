@@ -9,7 +9,7 @@ from sqlalchemy import extract, func, select
 from sqlalchemy.orm import Session
 
 from ..db import get_session
-from ..models import DupGroup, DupMember, Face, Media, Person, Quality, SourceFolder
+from ..models import DupGroup, DupMember, Event, EventMedia, Face, Media, MediaTag, Person, Quality, SourceFolder
 from ..safety import is_inside, open_source
 from ..scanner.thumbs import thumb_path
 
@@ -81,9 +81,12 @@ def list_media(
     year: int | None = None,
     order: Literal["asc", "desc"] = "desc",
     include_duplicates: bool = False,
+    tag: str | None = None,
     s: Session = Depends(get_session),
 ):
     q = select(Media).where(~Media.missing)
+    if tag:
+        q = q.where(Media.id.in_(select(MediaTag.media_id).where(MediaTag.tag == tag)))
     if not include_duplicates:
         q = q.where(Media.id.not_in(hidden_duplicates()))
     if kind:
@@ -139,6 +142,18 @@ def _get_media(s: Session, media_id: int) -> tuple[Media, Path]:
     return m, path
 
 
+def _event_of(s: Session, media_id: int) -> dict | None:
+    e = s.scalars(
+        select(Event).join(EventMedia, EventMedia.event_id == Event.id).where(EventMedia.media_id == media_id)
+    ).first()
+    if e is None:
+        return None
+    from .events import Presenter
+
+    d = Presenter(s, [e.id]).summary(e)
+    return {"id": e.id, "title": d["title"], "date_text": d["date_text"]}
+
+
 @router.get("/media/{media_id}")
 def media_detail(media_id: int, s: Session = Depends(get_session)):
     m, path = _get_media(s, media_id)
@@ -161,6 +176,13 @@ def media_detail(media_id: int, s: Session = Depends(get_session)):
             for f, name, hidden in faces
         ],
         "quality": quality_dict(s.get(Quality, m.id)),
+        "tags": [
+            {"tag": t, "score": sc}
+            for t, sc in s.execute(
+                select(MediaTag.tag, MediaTag.score).where(MediaTag.media_id == m.id).order_by(MediaTag.score.desc())
+            )
+        ],
+        "event": _event_of(s, m.id),
         "path": str(path),
         "size": m.size,
         "camera": m.camera,

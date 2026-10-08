@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { api, DATE_SOURCE_LABEL, formatDate, formatDuration, thumbUrl } from '../api'
-import type { DateSource, Kind, MediaItem, Stats } from '../api'
+import { api, DATE_SOURCE_LABEL, formatDate, formatDuration, TAG_LABEL, thumbUrl } from '../api'
+import type { DateSource, Kind, MediaItem, SceneTag, Stats } from '../api'
 import Viewer from '../components/Viewer'
 
 const PAGE = 200
@@ -10,6 +10,7 @@ interface Filters {
   kind?: Kind
   date_source?: DateSource
   include_duplicates?: boolean
+  tag?: SceneTag
 }
 
 export default function Library() {
@@ -125,6 +126,19 @@ export default function Library() {
             ]}
             onChange={(date_source) => setFilters((f) => ({ ...f, date_source }))}
           />
+          <select
+            value={filters.tag ?? ''}
+            onChange={(e) => setFilters((f) => ({ ...f, tag: (e.target.value || undefined) as SceneTag | undefined }))}
+            aria-label="Scene"
+            className="rounded-full bg-stone-200/70 px-3 py-1 text-sm text-stone-600"
+          >
+            <option value="">Any scene</option>
+            {(Object.keys(TAG_LABEL) as SceneTag[]).map((t) => (
+              <option key={t} value={t}>
+                {TAG_LABEL[t]}
+              </option>
+            ))}
+          </select>
           <label className="flex items-center gap-2 rounded-full bg-stone-200/70 px-3 py-1 text-sm text-stone-600 cursor-pointer">
             <input
               type="checkbox"
