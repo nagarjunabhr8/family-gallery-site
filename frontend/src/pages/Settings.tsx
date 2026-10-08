@@ -1,8 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useCallback, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { api, formatDate } from '../api'
-import type { AiStatus, AppSettings, Folder, ScanJob, ScanStatus } from '../api'
+import { api, formatDate, story } from '../api'
+import type { AiStatus, AppSettings, Folder, MusicLibrary, ScanJob, ScanStatus } from '../api'
 
 export default function Settings() {
   const [folders, setFolders] = useState<Folder[]>([])
@@ -82,7 +82,7 @@ export default function Settings() {
             onChange={(e) => setPath(e.target.value)}
             placeholder="D:\Photos\Family"
             aria-label="Folder path"
-            className="flex-1 rounded-xl border border-stone-300 bg-white px-4 py-2.5 font-mono text-sm outline-none focus:border-stone-500 focus:ring-2 focus:ring-stone-200"
+            className="flex-1 rounded-xl border border-stone-300 bg-paper px-4 py-2.5 font-mono text-sm outline-none focus:border-stone-500 focus:ring-2 focus:ring-stone-200"
           />
           <button
             type="submit"
@@ -119,7 +119,7 @@ export default function Settings() {
           {folders.map((f) => (
             <li
               key={f.id}
-              className="rounded-2xl bg-white border border-stone-200 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3"
+              className="rounded-2xl bg-paper border border-stone-200 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3"
             >
               <div className="flex-1 min-w-0">
                 <p className="font-mono text-sm text-stone-800 break-all">{f.path}</p>
@@ -149,6 +149,8 @@ export default function Settings() {
           ))}
         </ul>
       </section>
+
+      <MusicSettings />
 
       <DuplicateSettings scanning={scanning} onAnalyze={() => api.analyze().then(refreshStatus)} />
 
@@ -212,7 +214,7 @@ function JobCard({ job, live = false }: { job: ScanJob; live?: boolean }) {
     </div>
   )
   return (
-    <div className="rounded-2xl bg-white border border-stone-200 p-5">
+    <div className="rounded-2xl bg-paper border border-stone-200 p-5">
       <div className="flex justify-between text-sm">
         <span className="font-medium text-stone-800">{statusLabel(job)}</span>
         <span className="text-stone-500 tabular-nums">
@@ -320,7 +322,7 @@ function DuplicateSettings({ scanning, onAnalyze }: { scanning: boolean; onAnaly
           Re-analyse photos
         </button>
       </div>
-      <div className="mt-4 rounded-2xl bg-white border border-stone-200 p-5 space-y-5">
+      <div className="mt-4 rounded-2xl bg-paper border border-stone-200 p-5 space-y-5">
         {slider(
           'near_dup_threshold',
           'Look-alike sensitivity',
@@ -374,7 +376,7 @@ function DuplicateSettings({ scanning, onAnalyze }: { scanning: boolean; onAnaly
       </div>
 
       {ai && (
-        <div className="mt-4 rounded-2xl bg-white border border-stone-200 p-5">
+        <div className="mt-4 rounded-2xl bg-paper border border-stone-200 p-5">
           <h3 className="text-sm font-medium text-stone-800">Local AI models</h3>
           <p className="mt-1 text-xs text-stone-500">Run on this computer only. Nothing is uploaded.</p>
           <ul className="mt-3 space-y-1.5 text-sm">
@@ -387,6 +389,67 @@ function DuplicateSettings({ scanning, onAnalyze }: { scanning: boolean; onAnaly
             ))}
           </ul>
         </div>
+      )}
+    </section>
+  )
+}
+function MusicSettings() {
+  const [lib, setLib] = useState<MusicLibrary | null>(null)
+  const [path, setPath] = useState('')
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    story.music().then((m) => {
+      setLib(m)
+      setPath(m.folder ?? '')
+    })
+  }, [])
+
+  async function save(value: string | null) {
+    setError(null)
+    try {
+      const m = await story.setMusicFolder(value)
+      setLib(m)
+      setPath(m.folder ?? '')
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  return (
+    <section>
+      <h2 className="font-serif text-2xl text-stone-900">Slideshow music</h2>
+      <p className="mt-2 text-sm text-stone-600">
+        Choose a folder with your own songs (mp3, m4a, ogg, wav, flac). It is only read, never changed.
+      </p>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          save(path)
+        }}
+        className="mt-4 flex flex-col sm:flex-row gap-3"
+      >
+        <input
+          value={path}
+          onChange={(e) => setPath(e.target.value)}
+          placeholder="D:\Music\Family songs"
+          aria-label="Music folder"
+          className="flex-1 rounded-xl border border-stone-300 bg-paper px-4 py-2.5 font-mono text-sm outline-none focus:border-stone-500"
+        />
+        <button className="rounded-xl bg-stone-800 px-5 py-2.5 text-stone-50 hover:bg-stone-700">Use folder</button>
+        {lib?.folder && (
+          <button type="button" onClick={() => save(null)} className="rounded-xl px-4 py-2.5 text-sm text-stone-600 hover:bg-stone-200">
+            No music
+          </button>
+        )}
+      </form>
+      {error && <p className="mt-3 text-sm text-rose-700">{error}</p>}
+      {lib?.folder && (
+        <p className="mt-3 text-sm text-stone-600">
+          {lib.exists
+            ? `${lib.tracks.length} song${lib.tracks.length === 1 ? '' : 's'} found${lib.tracks.length ? `: ${lib.tracks.slice(0, 3).map((t) => t.title).join(', ')}${lib.tracks.length > 3 ? '…' : ''}` : ''}`
+            : 'That folder is not available right now (drive unplugged?).'}
+        </p>
       )}
     </section>
   )

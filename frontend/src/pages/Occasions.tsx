@@ -45,7 +45,7 @@ export default function Occasions() {
         </div>
         {error && <p className="mt-4 text-sm text-rose-700">{error}</p>}
 
-        <ul className="mt-6 divide-y divide-stone-200 rounded-2xl border border-stone-200 bg-white">
+        <ul className="mt-6 divide-y divide-stone-200 rounded-2xl border border-stone-200 bg-paper">
           {occasions.length === 0 && (
             <li className="px-5 py-8 text-center text-stone-500">
               No family dates yet. Add birthdays and anniversaries, or add birth dates on People pages.
@@ -210,18 +210,18 @@ function OccasionDialog({
           value={form.name}
           onChange={(e) => set('name', e.target.value)}
           placeholder={form.kind === 'anniversary' ? 'e.g. Amma & Nanna' : form.kind === 'birthday' ? 'e.g. Aadhya' : 'e.g. Griha pravesam'}
-          className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 outline-none focus:border-stone-500"
+          className="w-full rounded-xl border border-stone-300 bg-paper px-4 py-2.5 outline-none focus:border-stone-500"
         />
         <div className="grid grid-cols-3 gap-3 text-sm">
           <label className="text-stone-600">
             Day
             <input type="number" min={1} max={31} required value={form.day} onChange={(e) => set('day', Number(e.target.value))}
-              className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-2 py-1.5" />
+              className="mt-1 w-full rounded-lg border border-stone-300 bg-paper px-2 py-1.5" />
           </label>
           <label className="text-stone-600">
             Month
             <select value={form.month} onChange={(e) => set('month', Number(e.target.value))}
-              className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-2 py-1.5">
+              className="mt-1 w-full rounded-lg border border-stone-300 bg-paper px-2 py-1.5">
               {MONTHS.map((m, i) => (
                 <option key={m} value={i + 1}>{m}</option>
               ))}
@@ -231,14 +231,14 @@ function OccasionDialog({
             Year <span className="text-stone-400">(optional)</span>
             <input type="number" min={1900} max={2100} value={form.year ?? ''}
               onChange={(e) => set('year', e.target.value ? Number(e.target.value) : null)}
-              className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-2 py-1.5" />
+              className="mt-1 w-full rounded-lg border border-stone-300 bg-paper px-2 py-1.5" />
           </label>
         </div>
         {form.kind === 'birthday' && (
           <label className="block text-sm text-stone-600">
             Person (optional)
             <select value={form.person_id ?? ''} onChange={(e) => set('person_id', e.target.value ? Number(e.target.value) : null)}
-              className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-2 py-1.5">
+              className="mt-1 w-full rounded-lg border border-stone-300 bg-paper px-2 py-1.5">
               <option value="">Not linked</option>
               {people.map((p) => (
                 <option key={p.id} value={p.id}>{personLabel(p)}</option>
@@ -310,7 +310,7 @@ function Festivals() {
         </div>
       </div>
       {error && <p className="mt-3 text-sm text-rose-700">{error}</p>}
-      <ul className="mt-6 divide-y divide-stone-200 rounded-2xl border border-stone-200 bg-white">
+      <ul className="mt-6 divide-y divide-stone-200 rounded-2xl border border-stone-200 bg-paper">
         {data?.festivals.map((f) => (
           <li key={f.id} className="px-5 py-4">
             <div className="flex flex-wrap items-center gap-3">
@@ -322,7 +322,7 @@ function Festivals() {
                 </p>
               </div>
               <input type="date" key={f.date} defaultValue={f.date} onBlur={(e) => edit(f, e.target.value)}
-                className="rounded-lg border border-stone-300 bg-white px-2 py-1 text-sm" aria-label={`${f.name} date`} />
+                className="rounded-lg border border-stone-300 bg-paper px-2 py-1 text-sm" aria-label={`${f.name} date`} />
               {f.user_edited && (
                 <button onClick={() => api.resetFestival(f.id).then(load)} className="text-xs text-amber-700 underline" title="Restore the built-in date">
                   edited · reset

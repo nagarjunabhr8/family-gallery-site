@@ -13,6 +13,7 @@ export interface MediaItem {
   height: number | null
   duration_s: number | null
   has_thumb: boolean
+  rotation?: number
   error: string | null
   group_id?: number | null
   group_size?: number
@@ -379,6 +380,86 @@ export const api = {
   occasionYears: (kind: string, key: string) =>
     request<{ year: number; date: string; events: EventLink[] }[]>(`/api/occasions/${kind}/${key}/years`),
 }
+
+export interface StoryYear {
+  year: number
+  age: string | null
+  photo_count: number
+  cover_media_id: number | null
+  events: EventSummary[]
+  milestones: { date: string; label: string; kind: 'birth' | 'wedding'; person_id: number | null }[]
+}
+
+export interface StoryChapter {
+  stage_id: number | null
+  name: string
+  kind: string
+  start: string | null
+  end: string | null
+  age: string | null
+  years: StoryYear[]
+}
+
+export interface StoryStage {
+  id: number
+  name: string
+  start: string
+  kind: string
+  suggested: boolean
+}
+
+export interface Story {
+  owner: { id: number; name: string | null; birth_date: string | null } | null
+  first: string | null
+  last: string | null
+  photo_count: number
+  event_count: number
+  stages: StoryStage[]
+  chapters: StoryChapter[]
+}
+
+export interface OnThisDay {
+  date: string
+  span: 'day' | 'week'
+  years: { year: number; years_ago: number; label: string; total: number; items: MediaItem[] }[]
+}
+
+export interface MusicTrack {
+  id: string
+  title: string
+  file: string
+  size: number
+}
+
+export interface MusicLibrary {
+  folder: string | null
+  exists: boolean
+  tracks: MusicTrack[]
+}
+
+export const story = {
+  get: () => request<Story>('/api/story'),
+  setOwner: (personId: number | null) =>
+    request<{ ok: boolean }>('/api/story/owner', { method: 'PUT', body: JSON.stringify({ person_id: personId }) }),
+  suggest: (personId: number | null) =>
+    request<{ created: StoryStage[] }>('/api/story/suggest', { method: 'POST', body: JSON.stringify({ person_id: personId }) }),
+  addStage: (name: string, start: string) =>
+    request<StoryStage>('/api/story/stages', { method: 'POST', body: JSON.stringify({ name, start }) }),
+  editStage: (id: number, name: string, start: string) =>
+    request<StoryStage>(`/api/story/stages/${id}`, { method: 'PUT', body: JSON.stringify({ name, start }) }),
+  deleteStage: (id: number) => request<{ ok: boolean }>(`/api/story/stages/${id}`, { method: 'DELETE' }),
+  bestYears: () => request<{ year: number; photo_count: number; cover_media_id: number | null }[]>('/api/best'),
+  bestOf: (year: number, limit = 24) =>
+    request<{ year: number; photo_count: number; items: MediaItem[] }>(`/api/best/${year}?limit=${limit}`),
+  onThisDay: (day?: string) => request<OnThisDay>(`/api/onthisday${day ? `?day=${day}` : ''}`),
+  music: () => request<MusicLibrary>('/api/music'),
+  setMusicFolder: (path: string | null) =>
+    request<MusicLibrary>('/api/music/folder', { method: 'PUT', body: JSON.stringify({ path }) }),
+  setRotation: (mediaId: number, rotation: number) =>
+    request<MediaItem>(`/api/media/${mediaId}/rotation`, { method: 'PUT', body: JSON.stringify({ rotation }) }),
+}
+
+export const musicUrl = (id: string) => `/api/music/${id}`
 
 export const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 

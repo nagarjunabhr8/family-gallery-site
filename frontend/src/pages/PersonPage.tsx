@@ -3,6 +3,7 @@ import { api, faceUrl, formatDate, personLabel, thumbUrl, yearSpan } from '../ap
 import type { FaceItem, Person, PersonDetail } from '../api'
 import FaceGrid from '../components/FaceGrid'
 import Viewer from '../components/Viewer'
+import { rotationStyle } from '../components/Photo'
 
 export default function PersonPage({ id }: { id: number }) {
   const [person, setPerson] = useState<PersonDetail | null>(null)
@@ -80,7 +81,7 @@ export default function PersonPage({ id }: { id: number }) {
                 key={`birth-${person.birth_date}`}
                 defaultValue={person.birth_date ?? ''}
                 onChange={(e) => save({ birth_date: e.target.value || null })}
-                className="rounded-lg border border-stone-300 bg-white px-2 py-1"
+                className="rounded-lg border border-stone-300 bg-paper px-2 py-1"
               />
             </label>
             <button
@@ -93,7 +94,7 @@ export default function PersonPage({ id }: { id: number }) {
             <select
               value=""
               onChange={(e) => e.target.value && mergeInto(Number(e.target.value))}
-              className="rounded-lg border border-stone-300 bg-white px-2 py-1"
+              className="rounded-lg border border-stone-300 bg-paper px-2 py-1"
             >
               <option value="">Same person as…</option>
               {people
@@ -143,6 +144,7 @@ export default function PersonPage({ id }: { id: number }) {
                           src={thumbUrl(ph.id)}
                           alt={ph.filename}
                           loading="lazy"
+                          style={rotationStyle(ph.rotation)}
                           className="h-full w-full object-cover transition group-hover:scale-105"
                         />
                       )}

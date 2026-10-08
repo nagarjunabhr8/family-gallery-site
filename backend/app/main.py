@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import config, db, safety
-from .api import events, folders, groups, media, occasions, people, scan
+from .api import events, folders, groups, media, occasions, people, scan, story
 from .occasions.festivals import seed_festivals
 from .scanner.jobs import manager
 
@@ -35,6 +35,7 @@ app.include_router(groups.router)
 app.include_router(people.router)
 app.include_router(events.router)
 app.include_router(occasions.router)
+app.include_router(story.router)
 
 
 @app.get("/api/health")

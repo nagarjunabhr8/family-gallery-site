@@ -60,7 +60,7 @@ export default function Duplicates() {
               key={k ?? 'all'}
               onClick={() => setKind(k)}
               className={`rounded-full px-3 py-1 text-sm ${
-                kind === k ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-600 hover:text-stone-900'
+                kind === k ? 'bg-paper text-stone-900 shadow-sm' : 'text-stone-600 hover:text-stone-900'
               }`}
             >
               {k ? GROUP_KIND_LABEL[k] : 'All'} <span className="text-stone-400">{k ? counts[k] ?? 0 : allCount}</span>
@@ -118,7 +118,7 @@ function GroupCard({ group, onChoose }: { group: DupGroup; onChoose: (mediaId: n
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-white border border-stone-200 p-4 sm:p-5"
+      className="rounded-2xl bg-paper border border-stone-200 p-4 sm:p-5"
     >
       <header className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-700">

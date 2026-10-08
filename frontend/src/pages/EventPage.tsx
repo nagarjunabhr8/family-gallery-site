@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { api, formatDate, formatDuration, originalUrl, thumbUrl } from '../api'
 import type { EventDetail, EventSummary, MediaItem } from '../api'
 import Viewer from '../components/Viewer'
+import { rotationStyle } from '../components/Photo'
 
 export default function EventPage({ id }: { id: number }) {
   const [event, setEvent] = useState<EventDetail | null>(null)
@@ -187,7 +188,7 @@ export default function EventPage({ id }: { id: number }) {
                 }`}
                 title={`${m.filename}\n${formatDate(m.taken_at, true)}`}
               >
-                {m.has_thumb && <img src={thumbUrl(m.id)} alt="" loading="lazy" className="h-full w-full object-cover" />}
+                {m.has_thumb && <img src={thumbUrl(m.id)} alt="" loading="lazy" style={rotationStyle(m.rotation)} className="h-full w-full object-cover" />}
                 {m.kind === 'video' && (
                   <span className="absolute bottom-1 right-1 rounded bg-black/60 px-1 text-[10px] text-white">
                     ▶ {formatDuration(m.duration_s)}

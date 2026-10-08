@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api, DATE_SOURCE_LABEL, formatDate, formatDuration, TAG_LABEL, thumbUrl } from '../api'
 import type { DateSource, Kind, MediaItem, SceneTag, Stats } from '../api'
 import Viewer from '../components/Viewer'
+import { rotationStyle } from '../components/Photo'
 
 const PAGE = 200
 
@@ -210,7 +211,7 @@ function Tile({ item, onOpen }: { item: MediaItem; onOpen: () => void }) {
       title={`${item.filename}\n${formatDate(item.taken_at, true)} · ${DATE_SOURCE_LABEL[item.date_source]}`}
     >
       {item.has_thumb ? (
-        <img src={thumbUrl(item.id)} alt={item.filename} loading="lazy" className="h-full w-full object-cover" />
+        <img src={thumbUrl(item.id)} alt={item.filename} loading="lazy" style={rotationStyle(item.rotation)} className="h-full w-full object-cover" />
       ) : (
         <div className="flex h-full w-full items-center justify-center p-2 text-xs text-stone-500 break-all">
           {item.kind === 'video' ? '▶ ' : ''}
@@ -259,7 +260,7 @@ function Chips<T extends string>({
           key={label}
           onClick={() => onChange(v)}
           className={`rounded-full px-3 py-1 text-sm transition-colors ${
-            value === v ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-600 hover:text-stone-900'
+            value === v ? 'bg-paper text-stone-900 shadow-sm' : 'text-stone-600 hover:text-stone-900'
           }`}
         >
           {label}

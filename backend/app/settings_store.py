@@ -21,6 +21,10 @@ DEFAULTS: dict[str, Any] = {
     "event_min_photos": 3,
     # CLIP scene tag confidence (0..1) needed to tag a photo
     "tag_threshold": 0.35,
+    # Our Story: whose life the stages describe (a Person id)
+    "story_person_id": None,
+    # Slideshow music: a folder of the user's own songs (read-only)
+    "music_folder": None,
 }
 
 

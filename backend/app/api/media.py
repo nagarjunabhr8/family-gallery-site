@@ -31,6 +31,7 @@ def summary(m: Media) -> dict:
         "height": m.height,
         "duration_s": m.duration_s,
         "has_thumb": m.has_thumb,
+        "rotation": m.user_rotation,
         "error": m.error,
     }
 

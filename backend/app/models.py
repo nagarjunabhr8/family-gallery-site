@@ -62,6 +62,9 @@ class Media(Base):
     phash: Mapped[str | None] = mapped_column(String(16), default=None)
     pinned_best: Mapped[bool] = mapped_column(default=False)
 
+    # Phase 5: extra rotation chosen in the viewer (0/90/180/270). Display only; the file is never touched.
+    user_rotation: Mapped[int] = mapped_column(default=0)
+
     has_thumb: Mapped[bool] = mapped_column(default=False)
     missing: Mapped[bool] = mapped_column(default=False)  # file no longer found on disk
     error: Mapped[str | None] = mapped_column(Text, default=None)
@@ -249,6 +252,19 @@ class FestivalDate(Base):
     start: Mapped[date] = mapped_column(Date)  # e.g. Bhogi for Sankranti
     end: Mapped[date] = mapped_column(Date)  # e.g. Kanuma for Sankranti
     user_edited: Mapped[bool] = mapped_column(default=False)
+
+
+class StoryStage(Base):
+    """A chapter of the life story ("Childhood", "College", "Marriage"…). Ends where the next begins."""
+
+    __tablename__ = "story_stages"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String)
+    start: Mapped[date] = mapped_column(Date)
+    kind: Mapped[str] = mapped_column(String(16), default="custom")  # childhood|school|college|career|marriage|kids|custom
+    suggested: Mapped[bool] = mapped_column(default=False)  # made by "Suggest", not edited since
+    created_at: Mapped[datetime] = mapped_column(default=_now)
 
 
 class Setting(Base):

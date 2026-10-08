@@ -204,7 +204,7 @@ function PersonCard({
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Add a name"
-            className="w-full rounded-lg border border-stone-300 bg-white px-2 py-1 text-center text-sm outline-none focus:border-stone-500"
+            className="w-full rounded-lg border border-stone-300 bg-paper px-2 py-1 text-center text-sm outline-none focus:border-stone-500"
           />
         </form>
       )}

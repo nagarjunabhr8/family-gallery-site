@@ -1,12 +1,100 @@
 @import "tailwindcss";
+@import "@fontsource-variable/fraunces/soft.css";
+@import "@fontsource-variable/fraunces/soft-italic.css";
+@import "@fontsource-variable/inter/index.css";
+
+/* Dark mode is a class on <html>, set from the theme toggle (or the system setting). */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-  --font-sans: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --font-serif: "Fraunces Variable", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-sans: "Inter Variable", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+
+  /* Warm neutral palette (replaces Tailwind's stone): paper, sand and ink */
+  --color-stone-50: oklch(98.6% 0.006 85);
+  --color-stone-100: oklch(96.6% 0.008 80);
+  --color-stone-200: oklch(92.6% 0.011 75);
+  --color-stone-300: oklch(87.2% 0.014 70);
+  --color-stone-400: oklch(71.5% 0.019 65);
+  --color-stone-500: oklch(56% 0.021 62);
+  --color-stone-600: oklch(45% 0.019 60);
+  --color-stone-700: oklch(37.5% 0.016 58);
+  --color-stone-800: oklch(27.5% 0.012 55);
+  --color-stone-900: oklch(22% 0.01 55);
+  --color-stone-950: oklch(15.5% 0.008 55);
+
+  /* Card surface */
+  --color-paper: oklch(100% 0 0);
+
+  --animate-fade-in: fade-in 0.5s ease-out both;
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+/* Dark: flip the warm scale end to end, so "light background / dark ink" classes
+   become "dark background / light ink" without touching every component. */
+.dark {
+  --color-stone-50: oklch(16% 0.008 55);
+  --color-stone-100: oklch(20% 0.009 55);
+  --color-stone-200: oklch(27% 0.011 55);
+  --color-stone-300: oklch(35% 0.013 58);
+  --color-stone-400: oklch(50% 0.016 60);
+  --color-stone-500: oklch(66% 0.018 62);
+  --color-stone-600: oklch(76% 0.016 65);
+  --color-stone-700: oklch(84% 0.013 70);
+  --color-stone-800: oklch(91% 0.01 75);
+  --color-stone-900: oklch(95.5% 0.008 80);
+  --color-stone-950: oklch(98% 0.006 85);
+  --color-paper: oklch(21% 0.01 55);
+
+  /* soft tints (chips, alerts) become deep tints; their ink becomes light */
+  --color-amber-50: oklch(27.9% 0.077 45.635);
+  --color-amber-100: oklch(33% 0.08 46);
+  --color-amber-200: oklch(41.4% 0.112 45.904);
+  --color-amber-800: oklch(88% 0.12 90);
+  --color-amber-900: oklch(92.4% 0.12 95.746);
+  --color-rose-50: oklch(27.1% 0.105 12.094);
+  --color-rose-200: oklch(41% 0.159 10.272);
+  --color-rose-700: oklch(81% 0.117 11.638);
+  --color-rose-800: oklch(89.2% 0.058 10.001);
+
+  color-scheme: dark;
+}
+
+/* Always-dark surfaces (viewer, slideshow) keep the normal scale in both themes. */
+.fixed-scale {
+  --color-stone-100: oklch(96.6% 0.008 80);
+  --color-stone-200: oklch(92.6% 0.011 75);
+  --color-stone-300: oklch(87.2% 0.014 70);
+  --color-stone-400: oklch(71.5% 0.019 65);
+  --color-stone-500: oklch(56% 0.021 62);
+  --color-stone-900: oklch(22% 0.01 55);
+  --color-stone-950: oklch(15.5% 0.008 55);
 }
 
 html {
   background-color: var(--color-stone-50);
   color: var(--color-stone-800);
   font-family: var(--font-sans);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h1, h2, h3, .font-serif {
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+}
+
+/* gentle scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-stone-300) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
