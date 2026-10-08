@@ -72,16 +72,22 @@ export default function EventPage({ id }: { id: number }) {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
         <div className="absolute bottom-0 inset-x-0 p-6 sm:p-10 text-white">
-          <input
+          <textarea
             key={`t-${event.title}`}
             defaultValue={event.title}
             aria-label="Event title"
+            rows={1}
             onBlur={(e) => {
-              const v = e.target.value.trim()
+              const v = e.target.value.replace(/\s+/g, ' ').trim()
               if (v !== event.title) run(() => api.updateEvent(event.id, { title: v || null }))
             }}
-            onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-            className="w-full bg-transparent font-serif text-4xl sm:text-5xl outline-none drop-shadow placeholder:text-white/50 focus:border-b focus:border-white/40"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                ;(e.target as HTMLTextAreaElement).blur()
+              }
+            }}
+            className="field-sizing-content w-full resize-none bg-transparent font-serif text-3xl leading-tight sm:text-5xl outline-none drop-shadow placeholder:text-white/50 focus:border-b focus:border-white/40"
           />
           <p className="mt-2 text-sm text-white/85">
             {event.date_text}
