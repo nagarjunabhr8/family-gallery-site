@@ -65,6 +65,54 @@ def test_priority_filename_beats_mtime():
     assert (r.source, r.confidence, r.taken_at) == ("filename", "medium", datetime(2020, 1, 1))
 
 
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("IMG_20240229_120000.jpg", datetime(2024, 2, 29, 12, 0, 0)),  # leap day
+        ("WhatsApp Image 2023-05-14 at 12.00.00 PM.jpeg", datetime(2023, 5, 14, 12, 0, 0)),  # noon
+        ("WhatsApp Image 2023-05-14 at 12.30.00 AM.jpeg", datetime(2023, 5, 14, 0, 30, 0)),  # just after midnight
+        ("whatsapp image 2023-05-14 at 6.32.10 pm.jpeg", datetime(2023, 5, 14, 18, 32, 10)),  # lower case
+        ("IMG_20230514_183210_HDR.jpg", datetime(2023, 5, 14, 18, 32, 10)),  # suffixes
+        ("IMG_20230514_183210(1).jpg", datetime(2023, 5, 14, 18, 32, 10)),  # copy marker
+        ("1234_IMG_20230514_183210.jpg", datetime(2023, 5, 14, 18, 32, 10)),  # leading digits
+        ("Trip 2019-12-20 day 2.jpg", datetime(2019, 12, 20)),
+    ],
+)
+def test_filename_edge_cases(name, expected):
+    assert date_from_filename(name) == expected
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "IMG_20230229_120000.jpg",  # 29 Feb in a non-leap year
+        "IMG_20230431_120000.jpg",  # 31 April
+        "IMG_20230514_256199.jpg",  # 25:61:99 isn't a time; the date alone is still found below
+    ],
+)
+def test_impossible_dates_are_not_invented(name):
+    got = date_from_filename(name)
+    assert got is None or got == datetime(2023, 5, 14)
+
+
+def test_exif_variants():
+    assert parse_exif_datetime("2019-08-15T10:20:30") == datetime(2019, 8, 15, 10, 20, 30)
+    assert parse_exif_datetime("2019:08:15 10:20:30+05:30") == datetime(2019, 8, 15, 10, 20, 30)
+    assert parse_exif_datetime("2019:02:30 10:20:30") is None  # 30 February
+    assert parse_exif_datetime("1970:01:01 00:00:00") is None  # epoch default, before 1980
+    assert parse_exif_datetime("2999:01:01 00:00:00") is None  # far future
+
+
+def test_implausible_video_time_falls_back_to_filename():
+    r = detect_date("VID_20200101_101010.mp4", 0, video_created=datetime(1904, 1, 1))
+    assert (r.source, r.taken_at) == ("filename", datetime(2020, 1, 1, 10, 10, 10))
+
+
+def test_mtime_drops_microseconds():
+    r = detect_date("photo.jpg", datetime(2018, 6, 1, 12, 0, 0, 999999).timestamp())
+    assert r.taken_at.microsecond == 0
+
+
 def test_fallback_mtime():
     ts = datetime(2018, 6, 1, 12, 0, 0).timestamp()
     r = detect_date("DSC_0001.jpg", ts)

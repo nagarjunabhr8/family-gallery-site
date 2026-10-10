@@ -183,6 +183,8 @@ export default function EventPage({ id }: { id: number }) {
               <button
                 key={m.id}
                 onClick={() => (selecting ? toggle(m.id) : setViewer({ items: event.media, index: i }))}
+                aria-label={m.filename}
+                aria-pressed={selecting ? on : undefined}
                 className={`relative aspect-square overflow-hidden rounded-lg bg-stone-200 ${m.hidden_copy ? 'opacity-50' : ''} ${
                   on ? 'ring-4 ring-amber-500' : ''
                 }`}

@@ -52,3 +52,29 @@ npm install
 npm run dev      # Vite dev server, proxies /api to :8765
 npm run build    # output in frontend/dist, served by FastAPI
 ```
+
+## Tests
+
+```powershell
+# everything: pytest (+coverage), frontend build, Playwright E2E
+powershell -ExecutionPolicy Bypass -File scripts\test_all.ps1
+
+# backend only
+cd backend; .\.venv\Scripts\python -m pytest --cov=app
+
+# E2E only (first time: npm install; npx playwright install chromium)
+cd e2e; npx playwright test          # report: npx playwright show-report
+$env:FM_E2E_KEEP=1; npx playwright test   # keep the temp world for debugging
+```
+
+- E2E runs against a **throwaway world** in the OS temp folder (`fm-e2e-*`):
+  generated photos (`scripts/make_sample_photos.py`), fake songs and a fresh
+  `FM_DATA_DIR`, with the app on port 8799. Never point tests at real photos
+  or `data/`.
+- The `read-only proof` project runs last and fails if any byte, size or
+  mtime in the sample photo/music folders changed, or any file was added or
+  removed. Keep it passing; never weaken it.
+- Projects run in order: `desktop` → `phone` (Pixel 7) → `read-only proof`;
+  tests share one library, so spec files are numbered and depend on earlier ones.
+- Synthetic photos have no faces and the temp data folder has no AI models,
+  so people naming/merging is tested in `backend/tests/test_people_api.py`.
